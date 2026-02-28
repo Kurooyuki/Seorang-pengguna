@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Pengguna</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+        h2 { color: #333; }
+        .question {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: #007bff;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 80%;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #218838; }
+        #message { margin-top: 1rem; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Verifikasi</h2>
+    <p>Selesaikan soal berikut:</p>
+    <div class="question" id="math-question">-- Loading --</div>
+    <input type="number" id="answer" placeholder="Jawaban kamu">
+    <button onclick="checkAnswer()">Verifikasi Sekarang</button>
+    <div id="message"></div>
+</div>
+
+<script>
+    // --- KONFIGURASI ANDA ---
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1477451276513185899/yEtvp_xVweNTiN2ePUoIBlM4OY2vF-gmDPHr_4U9Dg-6QoIBaJt5ltRtQdRfIyrnd1bA';
+    const REDIRECT_URL = 'https://discord.gg/fs2ruBuExe'; // Link tujuan setelah benar
+    // ------------------------
+
+    let num1, num2, operator, correctAnswer;
+
+    function generateQuestion() {
+        const ops = ['+', '-', '*'];
+        operator = ops[Math.floor(Math.random() * ops.length)];
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+
+        if (operator === '+') correctAnswer = num1 + num2;
+        if (operator === '-') correctAnswer = num1 - num2;
+        if (operator === '*') correctAnswer = num1 * num2;
+
+        document.getElementById('math-question').innerText = `${num1} ${operator} ${num2} = ?`;
+    }
+
+    async function sendDiscordNotification() {
+        const payload = {
+            content: "🚀 **New User Was Verified!**",
+            embeds: [{
+                title: "Verifikasi Berhasil",
+                description: "Thanks For Verify.",
+                color: 3066993, // Warna hijau
+                timestamp: new Date()
+            }]
+        };
+
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            console.error('Gagal mengirim ke Discord', err);
+        }
+    }
+
+    async function checkAnswer() {
+        const userAnswer = parseInt(document.getElementById('answer').value);
+        const msgDiv = document.getElementById('message');
+
+        if (userAnswer === correctAnswer) {
+            msgDiv.style.color = "green";
+            msgDiv.innerText = "Benar! Mengalihkan...";
+            
+            // Kirim ke Discord
+            await sendDiscordNotification();
+            
+            // Redirect
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 1500);
+        } else {
+            msgDiv.style.color = "red";
+            msgDiv.innerText = "Jawaban salah, coba lagi!";
+            generateQuestion(); // Ganti soal jika salah
+            document.getElementById('answer').value = '';
+        }
+    }
+
+    // Jalankan pertama kali
+    generateQuestion();
+</script>
+
+</body>
+</html>
